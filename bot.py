@@ -130,17 +130,15 @@ def get_avatar_url_gif_or_png(person):
     Pick animated GIF when available and PNG otherwise'''
 
     try:
-        return str(person.avatar_url_as(static_format='png')).rsplit('?', 1)[0]
+        return str(person.avatar_url_as(static_format='png')).rsplit('?', 1)[0]  # TODO what happens with GIFs?
     except:
         img_url = str(person.avatar_url).replace('webp', 'png').rsplit('?', 1)[0]
-        if person.avatar.startswith('a_'):
-            img_url = img_url.replace('png', 'gif')
 
         if not img_url:
-            img_url = 'https://cdn.discordapp.com/embed/avatars/' + \
-                str(int(person.discriminator) % 5) + '.png'
+            return f'https://cdn.discordapp.com/embed/avatars/{int(person.discriminator) % 5}.png'
 
-        return img_url
+        if person.avatar.startswith('a_'):
+            return img_url.replace('png', 'gif')
 
 
 async def avatar_download_asynchronous(person_list):
@@ -185,7 +183,7 @@ async def execute_code(message, i):
         with io.StringIO() as buf:
             with contextlib.redirect_stdout(buf):
                 exec(code, {}, {})
-            await send_message(message, buf.getvalue().replace('@', '@​')[:2000])  # escape '@everyone' using zero-width space
+            await send_message(message, buf.getvalue().replace('@', '@\u200b')[:2000])  # escape '@everyone' using zero-width space
     except Exception as e:
         await send_message(message, '**' + repr(e) + '**')
 
@@ -221,28 +219,18 @@ async def hug(message, message_lower):
         return
 
     start_time = time.time()
-
     str_huggees = lambda a: str([str(s) for s in a])
-    huggee_list = message.mentions
-
-    if 'hug me' in message_lower:
-        huggee_list.append(message.author)
-
-    if 'hug yourself' in message_lower:
-        huggee_list.append(client.user)
-
-    if 'hug someone' in message_lower:
-        huggee_list.append(random.choice(message.guild.members))
 
     hug_everyone = message.mention_everyone or 'everyone' in message_lower
-    if hug_everyone:
-        huggee_list = message.guild.members
+    huggee_list = message.mentions + \
+        [message.author                         ] * ('hug me'       in message_lower) + \
+        [client.user                            ] * ('hug yourself' in message_lower) + \
+        [random.choice(message.guild.members)   ] * ('hug someone'  in message_lower) + \
+         message.guild.members                    * (hug_everyone)
 
-    huggee_list = list(set(huggee_list))
-    random.shuffle(huggee_list)
-    huggee_list = huggee_list[:3]
+    huggee_list = random.sample( huggee_list, len(huggee_list[:3]) )
 
-    logger.info(f'HUG: {str_huggees(message.mentions)} {"@everyone" * hug_everyone}')
+    logger.info(f'HUG: {str_huggees(huggee_list)} {"@everyone" * hug_everyone}')
 
     if not huggee_list:
         return
@@ -305,7 +293,7 @@ async def on_message(message):
 
     # reverse input
     if 'revers' in message_lower:
-        await send_message(message, message.content[::-1].replace('@', '@​'))  # escape '@everyone' using zero-width space
+        await send_message(message, message.content[::-1].replace('@', '@​\u200b'))  # escape '@everyone' using zero-width space
 
     if 'good bot' == message_lower:
         await send_message(message, 'uwu')

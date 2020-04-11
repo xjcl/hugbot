@@ -73,7 +73,7 @@ def hugify(huggees, maxsize=None, base_mode='grin', crop_mode='square'):
     return image
 
 
-def hugify_save(huggee_fns, fn_out='hugged.png', maxsize=None, base_mode=None, crop_mode='square'):
+def hugify_save(huggee_fns, fn_out='hugged.png', maxsize=None, base_mode='smile', crop_mode='square'):
     if not issubclass(type(huggee_fns), list):
         fn_out = huggee_fns + '.hugged.png'
         huggee_fns = [huggee_fns]
@@ -82,52 +82,21 @@ def hugify_save(huggee_fns, fn_out='hugged.png', maxsize=None, base_mode=None, c
     for i in range(len(huggee_fns[:3])):
         huggees.append( PIL.Image.open(huggee_fns[i]).convert('RGBA') )
 
-    if not base_mode:
-        base_mode = random.choice(['grin', 'smile'])
     hugify(huggees, maxsize, base_mode, crop_mode).save(fn_out)
 
 
-def hugify_gif_save(huggee_fns, fn_out='hugged.gif', maxsize=None, base_mode=None, crop_mode='square'):
+def hugify_gif_save(huggee_fns, fn_out='hugged.gif', maxsize=None, base_mode='smile', crop_mode='square'):
 
-    huggee_readers = [
-        imageio.get_reader(huggee_fn)
-        for huggee_fn in huggee_fns
-    ]
+    readers = [ imageio.get_reader(huggee_fn)  for huggee_fn in huggee_fns ]
+    per_frame_duration = min( reader.get_meta_data().get('duration', 1000)  for reader in readers )
+    frames = [ [ PIL.Image.fromarray(data).convert('RGBA') for data in reader ]  for reader in readers ]
+    for reader in readers:  reader.close()
 
-    per_frame_duration = min(
-        huggee_reader.get_meta_data().get('duration', 1000)
-        for huggee_reader in huggee_readers
-    )
-
-    huggee_frames = [
-        [ PIL.Image.fromarray(huggee_reader.get_next_data().copy()).convert('RGBA') for _ in range(huggee_reader.get_length()) ]
-        for huggee_reader in huggee_readers
-    ]
-
-    # no context manager?
-    for huggee_reader in huggee_readers:
-        huggee_reader.close()
-
-    # treat PNGs as 1-frame GIFs
-    total_frames = min(
-        float('inf') if len(sequence) == 1 else len(sequence)
-        for sequence in huggee_frames
-    )
-    if total_frames == float('inf'):
-        total_frames = 1
-
-    huggee_frames = [
-        sequence * total_frames if len(sequence) == 1 else sequence
-        for sequence in huggee_frames
-    ]
-
+    # treat a static image as 1-frame GIF
     # TODO: do better interlacing, maybe with greatest common denominator etc (-> filesize limit?)
-    if not base_mode:
-        base_mode = 'smile'
-    frames = [
-        hugify(huggees, maxsize, base_mode, crop_mode)
-        for huggees in zip(*huggee_frames)
-    ]
+    total_frames = min( ( len(sequence) for sequence in frames if len(sequence) ), default=1 )
+    frames = [ sequence * total_frames if len(sequence) == 1 else sequence  for sequence in frames ]
+    frames = [ hugify(huggees, maxsize, base_mode, crop_mode)  for huggees in zip(*frames) ]
 
     # In case these are actually not animated, save as high-quality PNG and not GIF
     if len(frames) == 1:
@@ -181,4 +150,3 @@ if __name__ == '__main__':
 
         print(huggee_fn)
         hugify_save(huggee_fn)
-

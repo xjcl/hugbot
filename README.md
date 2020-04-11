@@ -6,7 +6,7 @@ A Discord bot that lets you hug people!
 
 ![demo of hugbot in action](jan_thingy.mp4.gif)
 
-## Utilize hubot
+## Utilize hugbot
 
 [Add hugbot to your server](https://discordapp.com/api/oauth2/authorize?client_id=680141163466063960&permissions=34816&scope=bot)
 

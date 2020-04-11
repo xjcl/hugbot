@@ -127,3 +127,15 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+# --- Jan ---
+attach
+*.png
+*.gif
+
+*.log
+
+*.sh
+continuous_deployment*
+old/

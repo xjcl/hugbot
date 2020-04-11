@@ -8,5 +8,7 @@ A Discord bot that lets you hug people!
 
 See me in [the public development server](https://discord.gg/ZmbBt2A)
 
-(TODO: public release of the code is still to come)
 
+# How to run
+
+```DISCORD_BOT_SECRET=yourTokenHere ./run_public.sh```

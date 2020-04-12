@@ -8,7 +8,6 @@ Preliminary reading:
 '''
 
 import time
-import pytz
 import datetime
 
 import os
@@ -287,9 +286,9 @@ async def on_message(message):
 
 
     # # remind to go to bed
-    # if datetime.datetime.now(tz=pytz.timezone('CET')).hour < 7:
+    # if datetime.datetime.utcnow().hour < 7:
     #     await send_message(client, message, "Well we had a great day but it's time to go to bed everyone! :hugging:")
-    #     # await message.channel.send(str(datetime.datetime.now(tz=pytz.timezone('CET'))))
+    #     # await message.channel.send(str(datetime.datetime.utcnow()))
 
 
     message_lower = message.content.lower()

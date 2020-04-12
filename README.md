@@ -6,14 +6,15 @@ A Discord bot that lets you hug people!
 
 ![demo of hugbot in action](jan_thingy.mp4.gif)
 
-## Utilize hugbot
+## How to use
 
-[Add hugbot to your server](https://discordapp.com/api/oauth2/authorize?client_id=680141163466063960&permissions=34816&scope=bot)
+[Click here to add hugbot to your server](https://discordapp.com/api/oauth2/authorize?client_id=680141163466063960&permissions=34816&scope=bot)!
 
-## Where you can find me
+## How to run your own copy
 
-See me in [the public development server](https://discord.gg/ZmbBt2A)
+- **Directly**: ```DISCORD_BOT_SECRET=yourTokenHere ./run_public.sh```
+- **Docker**: Instructions are in the `Dockerfile` 🐳
 
-## How to run
+## Contact
 
-Run ```DISCORD_BOT_SECRET=yourTokenHere ./run_public.sh```
+See me in [the public development server](https://discord.gg/ZmbBt2A)!

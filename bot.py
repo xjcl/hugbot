@@ -45,9 +45,16 @@ cooldown = collections.defaultdict(int)
 RATE_LIMIT = 10
 COOLDOWN_MINUTES = 10  # minutes of cooldown when RATE_LIMIT hit
 
+client.on_ready_called = False
+
 
 @client.event
 async def on_ready():
+    if client.on_ready_called:
+        return
+
+    client.on_ready_called = True
+
     g = discord.Game(['I won\'t reply!', 'Use *hug help*!'][is_production])
     await client.change_presence(activity=g)
 

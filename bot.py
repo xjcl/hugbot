@@ -13,6 +13,7 @@ import datetime
 import os
 import random
 import platform
+import subprocess
 import collections
 
 import logging
@@ -91,6 +92,8 @@ async def on_ready():
             max_latency = max((timestamp.second, timestamp) for timestamp in uptimestamps if timestamp.second <= 58)
             await uptime_channel.send(f'Maximum latency: {max_latency[0]} seconds at {max_latency[1]}')
             await uptime_channel.send(f'Servers served: {len(client.guilds)}')
+            await uptime_channel.send(f"```{subprocess.check_output(['uptime']).decode().strip()}```")
+            await uptime_channel.send(f"```{subprocess.check_output(['df', '-h', '/']).decode().strip().splitlines()[-1]}```")
 
     logger.error(f'on_ready concluded unexpectedly. Heartbeat channel {heartbeat_channel} uptime channel {uptime_channel}')
 

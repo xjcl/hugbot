@@ -185,8 +185,7 @@ async def execute_code(message, i):
 
     code = message.content[i+1:].replace('```', '').replace('python', '')
     if any(badstr in code for badstr in ['open', 'token', 'os', 'sys', 'exit', 'import', 'subprocess', '_', 'rm']):
-        await send_message(client, message, '**You are trying to hack me. Incident reported to FBI CIA**')
-        return
+        return await send_message(client, message, '**You are trying to hack me. Incident reported to FBI CIA**')
 
     try:
         with io.StringIO() as buf:
@@ -202,30 +201,25 @@ async def hug(message, message_lower):
     '''hug a person's profile picture'''
 
     if 'hug help' in message_lower:
-        await send_message(message, '''__Hi! I'm a bot who hugs people!__
+        return await send_message(message, '''__Hi! I'm a bot who hugs people!__
             - **Huggee**: You can `hug me`, `hug @user`, `hug someone`, and `hug everyone`
             - **Crop**: You can `hug @user square` for their full avatar or `hug @user circle` for a round cutout
             - **Base**: You can `hug @user grin` or `hug @user smile` for different base images
             - **Cooldown**: I will stop responding if you send too many requests
             - **Add me to your server**: <https://discordapp.com/api/oauth2/authorize?client_id=680141163466063960&permissions=34816&scope=bot>
             - **Contact**: See me in the public development server: <https://discord.gg/ZmbBt2A> :slight_smile:''')
-        return
 
     if 'hug attach' in message_lower or 'hug this' in message_lower:
-        try:
-            url = message.attachments[0].url
-            logger.info(f'HUG: {url}')
-        except:
+        if not message.attachments:
             return
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=MOZHEADER) as resp:
+            async with session.get(message.attachments[0].url, headers=MOZHEADER) as resp:
                 async with aiofiles.open('attach', 'wb') as file:
                     await file.write(await resp.read())
 
         fn = hugify.hugify_gif_save(['attach'], 'hugged.gif', 180)  # 200
-        await send_file(message, '', fn, fn)
-        return
+        return await send_file(message, '', fn, fn)
 
     start_time = time.time()
     str_huggees = lambda a: str([str(s) for s in a])
@@ -274,31 +268,16 @@ async def on_message(message):
 
     # don't respond to bots
     if message.author.bot:
-        logger.info(f'INTERNAL: Message by bot {message.author} -> message ignored')
-        return
+        return logger.info(f'INTERNAL: Message by bot {message.author} -> message ignored')
 
     # rate-limit spammers:  allow RATE_LIMIT messages per COOLDOWN_MINUTES minutes
     if cooldown.get(message.author.id, 0) >= RATE_LIMIT:
-        logger.info(f'INTERNAL: Message by {message.author} who is rate limited -> message ignored')
-        return
-
-
-    # await send_message_production(client, message, 'I can still respond to your messages!')
-    # reply = await client.wait_for_message(timeout=10)
-    # if 'shut up' in reply.content:  await send_message_production(client, message, 'no u')
-
-
-    # # remind to go to bed
-    # if datetime.datetime.utcnow().hour < 7:
-    #     await send_message(client, message, "Well we had a great day but it's time to go to bed everyone! :hugging:")
-    #     # await message.channel.send(str(datetime.datetime.utcnow()))
-
+        return logger.info(f'INTERNAL: Message by {message.author} who is rate limited -> message ignored')
 
     message_lower = message.content.lower()
-    i = message.content.find('\n')
+    i = message_lower.find('\n')
     if '```python' in message_lower[:i]:
         await execute_code(message, i)
-
 
     # reverse input
     if 'revers' in message_lower:

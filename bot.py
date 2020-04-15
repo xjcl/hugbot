@@ -201,13 +201,14 @@ async def hug(message, message_lower):
     '''hug a person's profile picture'''
 
     if 'hug help' in message_lower:
-        return await send_message(message, '''__Hi! I'm a bot who hugs people!__
+        await send_message(message.author, '''__Hi! I'm a bot who hugs people!__
             - **Huggee**: You can `hug me`, `hug @user`, `hug someone`, and `hug everyone`
             - **Crop**: You can `hug @user square` for their full avatar or `hug @user circle` for a round cutout
             - **Base**: You can `hug @user grin` or `hug @user smile` for different base images
             - **Cooldown**: I will stop responding if you send too many requests
             - **Add me to your server**: <https://discordapp.com/api/oauth2/authorize?client_id=680141163466063960&permissions=34816&scope=bot>
             - **Contact**: See me in the public development server: <https://discord.gg/ZmbBt2A> :slight_smile:''')
+        return
 
     if 'hug attach' in message_lower or 'hug this' in message_lower:
         if not message.attachments:
@@ -288,7 +289,10 @@ async def on_message(message):
 
     if 'uh' + '-' * (len(message_lower) - 2) == message_lower:
         await send_message(message, message_lower + '-')
-
+    
+    if message_lower.startswith("hug me irl"):
+        await send.message(message, 'I can\'t do that!! :pensive:')
+                
     # hugify!! ^_^
     if message_lower.startswith('hug'):
         await hug(message, message_lower)

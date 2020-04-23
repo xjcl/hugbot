@@ -45,6 +45,7 @@ cooldown = collections.defaultdict(int)
 RATE_LIMIT = 10
 COOLDOWN_MINUTES = 10  # minutes of cooldown when RATE_LIMIT hit
 
+client.hug_cnt_day = 0
 client.on_ready_called = False
 
 
@@ -91,9 +92,11 @@ async def on_ready():
                 await uptime_channel.send('No downtime yay!! :hugging:')
             max_latency = max((timestamp.second, timestamp) for timestamp in uptimestamps if timestamp.second <= 58)
             await uptime_channel.send(f'Maximum latency: {max_latency[0]} seconds at {max_latency[1]}')
-            await uptime_channel.send(f'Servers served: {len(client.guilds)}')
             await uptime_channel.send(f"```{subprocess.check_output(['uptime']).decode().strip()}```")
             await uptime_channel.send(f"```{subprocess.check_output(['df', '-h', '/']).decode().strip().splitlines()[-1]}```")
+            await uptime_channel.send(f'Servers served: {len(client.guilds)}')
+            await uptime_channel.send(f"Hugs (today/lifetime): {client.hug_cnt_day}/{len(open('hug_cnt_total').read())}")
+            client.hug_cnt_day = 0
 
     logger.error(f'on_ready concluded unexpectedly. Heartbeat channel {heartbeat_channel} uptime channel {uptime_channel}')
 
@@ -254,7 +257,10 @@ async def hug(message, message_lower):
         await send_file(message, reply, fn, fn)
         # await send_file(message, reply, fn, 'hugged ' + str_huggees(huggee_list) + '.gif')
 
+        client.hug_cnt_day += 1
         logger.info(f'Done t={time.time() - start_time}')
+        logger.info(client.hug_cnt_day)
+        open('hug_cnt_total', 'a').write('.')
 
 
 @client.event

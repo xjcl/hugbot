@@ -1,14 +1,24 @@
 # hugbot
 
-A Discord bot that lets you hug people!
+![hugbot logo](hugbot_logo.png) A Discord bot that lets you hug people! Add it to your server [here](https://discordapp.com/api/oauth2/authorize?client_id=680141163466063960&permissions=34816&scope=bot)!
 
 ## Demo
 
 ![demo of hugbot in action](jan_thingy.mp4.gif)
 
-## How to use
+## Features
 
-[Click here to add hugbot to your server](https://discordapp.com/api/oauth2/authorize?client_id=680141163466063960&permissions=34816&scope=bot)!
+- hug victims
+    - `hug @user`: hugs a person's profile picture (up to 3 @'s possible)
+    - `hug me`
+    - `hug someone`
+    - `hug everyone`: hugs 3 random people to represent the concept of "everyone"
+- format options
+    - `hug @user grin` or `hug @user smile` for different base emojis
+    - `hug @user square` or `hug @user circle` for the full profile picture or a round cutout
+    - all variants support animated/GIF profile pictures as well!
+- cooldown to prevent spam
+- uptime monitoring and hug statistics
 
 ## How to run your own copy
 

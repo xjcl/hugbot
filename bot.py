@@ -207,7 +207,7 @@ async def hug(message, message_lower):
         return await send_message(message, '''__Hi! I'm a bot who hugs people!__
             - **Huggee**: You can `hug me`, `hug @user`, `hug someone`, and `hug everyone`
             - **Crop**: You can `hug @user square` for their full avatar or `hug @user circle` for a round cutout
-            - **Base**: You can `hug @user grin` or `hug @user smile` for different base images
+            - **Base**: You can `hug @user grin` or `hug @user smile` for different base emojis
             - **Cooldown**: I will stop responding if you send too many requests
             - **Add me to your server**: <https://discordapp.com/api/oauth2/authorize?client_id=680141163466063960&permissions=34816&scope=bot>
             - **Contact**: See me in the public development server: <https://discord.gg/ZmbBt2A> :slight_smile:''')

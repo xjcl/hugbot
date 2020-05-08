@@ -221,7 +221,7 @@ async def hug(message, message_lower):
                 async with aiofiles.open('attach', 'wb') as file:
                     await file.write(await resp.read())
 
-        fn = hugify.hugify_gif_save(['attach'], 'hugged.gif', 180)  # 200
+        fn = hugify.apply_gif_save(['attach'], hugify.hugged, 'hugged.gif', 180)  # 200
         return await send_file(message, '', fn, fn)
 
     start_time = time.time()
@@ -253,7 +253,7 @@ async def hug(message, message_lower):
 
         reply = 'Please refrain from mentioning everyone, use "hug everyone" (no @) instead' * message.mention_everyone
 
-        fn = hugify.hugify_gif_save(in_filenames, 'hugged.gif', 180, base_mode, crop_mode)
+        fn = hugify.apply_gif_save(in_filenames, hugify.hugged, 'hugged.gif', 180, None, base_mode, crop_mode)
         await send_file(message, reply, fn, fn)
         # await send_file(message, reply, fn, 'hugged ' + str_huggees(huggee_list) + '.gif')
 
@@ -301,7 +301,7 @@ async def on_message(message):
 
     if 'give autograph' in message_lower:
         in_filenames = await avatar_download_asynchronous([message.author])
-        fn = hugify.autograph(in_filenames[0], str(message.author)[:-5])
+        fn = hugify.apply_gif_save([in_filenames[0]], hugify.autographed, text=str(message.author)[:-5])
         return await send_file(message, '', fn, fn)
 
 

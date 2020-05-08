@@ -43,28 +43,28 @@ def resize_and_center(image, new_dim):
     return PIL.ImageOps.expand(image, padding)
 
 
-def hugify(huggees, maxsize=None, base_mode='grin', crop_mode='square'):
+def hugged(people, maxsize=None, text=None, base_mode='grin', crop_mode='square'):
     '''creates hug scene from input which is resized to maxsize
     input: up to 3 (profile) pictures that will be hugged, as PIL.Image
     return: single PIL.Image'''
 
-    assert len(huggees) <= 3
+    assert len(people) <= 3
 
     image = {'grin': base_grin, 'smile': base_smile}[base_mode].copy()
-    align = alignments[len(huggees)-1]
+    align = alignments[len(people)-1]
 
-    for i in range(len(huggees)):
-        huggee = huggees[i]
+    for i in range(len(people)):
+        person = people[i]
 
         if crop_mode == 'circle':
-            mask = PIL.Image.new('L', huggee.size, 0)
-            PIL.ImageDraw.Draw(mask).ellipse((0, 0) + huggee.size, fill=255)
-            mask = PIL.ImageChops.darker(mask, huggee.split()[-1])
-            huggee.putalpha(mask)
+            mask = PIL.Image.new('L', person.size, 0)
+            PIL.ImageDraw.Draw(mask).ellipse((0, 0) + person.size, fill=255)
+            mask = PIL.ImageChops.darker(mask, person.split()[-1])
+            person.putalpha(mask)
 
         # '261' instead of '260' makes the bottom look slightly less 'cut off' after resizing
-        huggee = resize_and_center(huggee, (align[i][2], align[i][2]))
-        image.paste(huggee, (align[i][0], image.height - 261 + align[i][1]), huggee)
+        person = resize_and_center(person, (align[i][2], align[i][2]))
+        image.paste(person, (align[i][0], image.height - 261 + align[i][1]), person)
 
     image.paste(hand_r, (image.width//2 - hand_r.width - 15, image.height - 260), hand_r)
     image.paste(hand_l, (image.width//2                + 15, image.height - 260), hand_l)
@@ -75,21 +75,36 @@ def hugify(huggees, maxsize=None, base_mode='grin', crop_mode='square'):
     return image
 
 
-def hugify_save(huggee_fns, fn_out='hugged.png', maxsize=None, base_mode='smile', crop_mode='square'):
-    if not issubclass(type(huggee_fns), list):
-        fn_out = huggee_fns + '.hugged.png'
-        huggee_fns = [huggee_fns]
+def autographed(people, maxsize=None, text=None, base_mode=None, crop_mode=None):
+    assert people[0].size == (256, 256)
+    draw = PIL.ImageDraw.Draw(people[0])
+    text = re.sub('[^0-9a-zA-Z]+', ' ', text)
 
-    huggees = []
-    for i in range(len(huggee_fns[:3])):
-        huggees.append( PIL.Image.open(huggee_fns[i]).convert('RGBA') )
+    fontsize = round( 50/len(text) * min(10, 4 + len(text)/2) )  # scale to width, but make shorter for short texts
+    font = PIL.ImageFont.truetype("GilkeyNotes.ttf", fontsize)  # https://www.fontmeme.com/fonts/gilkeynotes-font/
+    y = 256 - 15 - round(.65*fontsize)
 
-    hugify(huggees, maxsize, base_mode, crop_mode).save(fn_out)
+    [draw.text((20+dx, y+dy), text, fill=(0, 0, 0), font=font) for dx in [-1,1] for dy in [-1,1]]  # border
+    draw.text((20, y), text, fill=(255, 255, 255), font=font)
+
+    return people[0]
 
 
-def hugify_gif_save(huggee_fns, fn_out='hugged.gif', maxsize=None, base_mode='smile', crop_mode='square'):
+def apply_save(input_fns, func, fn_out='output.png', maxsize=None, text=None, base_mode='smile', crop_mode='square'):
+    if not issubclass(type(input_fns), list):
+        fn_out = input_fns + '.' + func.__name__ + '.png'
+        input_fns = [input_fns]
 
-    readers = [ imageio.get_reader(huggee_fn)  for huggee_fn in huggee_fns ]
+    people = []
+    for i in range(len(input_fns[:3])):
+        people.append( PIL.Image.open(input_fns[i]).convert('RGBA') )
+
+    func(people, maxsize, text, base_mode, crop_mode).save(fn_out)
+
+
+def apply_gif_save(input_fns, func, fn_out='output.gif', maxsize=None, text=None, base_mode='smile', crop_mode='square'):
+
+    readers = [ imageio.get_reader(input_fn)  for input_fn in input_fns ]
     per_frame_duration = min( reader.get_meta_data().get('duration', 1000)  for reader in readers )
     frames = [ [ PIL.Image.fromarray(data).convert('RGBA') for data in reader ]  for reader in readers ]
     for reader in readers:  reader.close()
@@ -98,7 +113,7 @@ def hugify_gif_save(huggee_fns, fn_out='hugged.gif', maxsize=None, base_mode='sm
     # TODO: do better interlacing, maybe with greatest common denominator etc (-> filesize limit?)
     total_frames = min( ( len(sequence) for sequence in frames if len(sequence) ), default=1 )
     frames = [ sequence * total_frames if len(sequence) == 1 else sequence  for sequence in frames ]
-    frames = [ hugify(huggees, maxsize, base_mode, crop_mode)  for huggees in zip(*frames) ]
+    frames = [ func(people, maxsize, text, base_mode, crop_mode)  for people in zip(*frames) ]
 
     # In case these are actually not animated, save as high-quality PNG and not GIF
     if len(frames) == 1:
@@ -139,38 +154,19 @@ def hugify_gif_save(huggee_fns, fn_out='hugged.gif', maxsize=None, base_mode='sm
     return fn_out
 
 
-# TODO: modify hugify*save
-# TODO: put next to hugify()
-def autograph(fn, text):
-    img = PIL.Image.open(fn).convert('RGBA')
-    assert img.size == (256, 256)
-    draw = PIL.ImageDraw.Draw(img)
-    font = PIL.ImageFont.truetype("GilkeyNotes.ttf", fontsize)  # https://www.fontmeme.com/fonts/gilkeynotes-font/
-
-    text = re.sub('[^0-9a-zA-Z]+', ' ', text)
-    fontsize = round( 50/len(text) * min(10, 4 + len(text)/2) )
-    # fontsize = round(140 / len(text)**.5)
-    y = 256 - 15 - round(.65*fontsize)
-
-    [draw.text((20+dx, y+dy), text, fill=(0, 0, 0), font=font) for dx in [-1,1] for dy in [-1,1]]
-    draw.text((20, y), text, fill=(255, 255, 255), font=font)
-
-    img.save('autographed.png')
-    return 'autographed.png'
-
-
 if __name__ == '__main__':
 
-    autograph('0.png', 'Jan♡')
+    apply_save('0.png', autographed, text='Janny♡')
+    apply_save('simp.png', autographed, text='The Simp Mage')
 
     if len(sys.argv) >= 2:
-        huggee_list = sys.argv[1:]
+        person_list = sys.argv[1:]
     else:
-        huggee_list = glob.glob('*.png') + glob.glob('*.jpg')
+        person_list = glob.glob('*.png') + glob.glob('*.jpg')
 
-    for huggee_fn in huggee_list:
-        if 'hugged' in huggee_fn or 'emoji' in huggee_fn:
+    for person_fn in person_list:
+        if 'hugged' in person_fn or 'emoji' in person_fn:
             continue
 
-        print(huggee_fn)
-        hugify_save(huggee_fn)
+        print(person_fn)
+        apply_save(person_fn, hugged)

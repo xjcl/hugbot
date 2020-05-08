@@ -9,6 +9,7 @@ import numpy
 import glob
 import sys
 import os
+import re
 
 
 # how to position 1-3 images (x, y, scaling)
@@ -144,9 +145,11 @@ def autograph(fn, text):
     img = PIL.Image.open(fn).convert('RGBA')
     assert img.size == (256, 256)
     draw = PIL.ImageDraw.Draw(img)
+    font = PIL.ImageFont.truetype("GilkeyNotes.ttf", fontsize)  # https://www.fontmeme.com/fonts/gilkeynotes-font/
+
+    text = re.sub('[^0-9a-zA-Z]+', ' ', text)
     fontsize = round( 50/len(text) * min(10, 4 + len(text)/2) )
     # fontsize = round(140 / len(text)**.5)
-    font = PIL.ImageFont.truetype("GilkeyNotes.ttf", fontsize)  # https://www.fontmeme.com/fonts/gilkeynotes-font/
     y = 256 - 15 - round(.65*fontsize)
 
     [draw.text((20+dx, y+dy), text, fill=(0, 0, 0), font=font) for dx in [-1,1] for dy in [-1,1]]
@@ -158,7 +161,7 @@ def autograph(fn, text):
 
 if __name__ == '__main__':
 
-    autograph('0.png')
+    autograph('0.png', 'Jan♡')
 
     if len(sys.argv) >= 2:
         huggee_list = sys.argv[1:]

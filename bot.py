@@ -142,9 +142,9 @@ def get_avatar_url_gif_or_png(person):
     Pick animated GIF when available and PNG otherwise'''
 
     try:
-        return str(person.avatar_url_as(static_format='png')).rsplit('?', 1)[0]  # TODO what happens with GIFs?
+        return str(person.avatar_url_as(static_format='png')).rsplit('?', 1)[0] + '?size=256'
     except:
-        img_url = str(person.avatar_url).replace('webp', 'png').rsplit('?', 1)[0]
+        img_url = str(person.avatar_url).replace('webp', 'png').rsplit('?', 1)[0] + '?size=256'
 
         if not img_url:
             return f'https://cdn.discordapp.com/embed/avatars/{int(person.discriminator) % 5}.png'
@@ -298,6 +298,11 @@ async def on_message(message):
     # hugify!! ^_^
     if message_lower.startswith('hug'):
         await hug(message, message_lower)
+
+    if 'give autograph' in message_lower:
+        in_filenames = await avatar_download_asynchronous([message.author])
+        fn = hugify.autograph(in_filenames[0], str(message.author)[:-5])
+        return await send_file(message, '', fn, fn)
 
 
 client.run(os.environ['DISCORD_BOT_SECRET'])

@@ -1,4 +1,5 @@
 import PIL.ImageChops
+import PIL.ImageFont
 import PIL.ImageDraw
 import PIL.ImageOps
 import PIL.Image
@@ -137,7 +138,27 @@ def hugify_gif_save(huggee_fns, fn_out='hugged.gif', maxsize=None, base_mode='sm
     return fn_out
 
 
+# TODO: modify hugify*save
+# TODO: put next to hugify()
+def autograph(fn, text):
+    img = PIL.Image.open(fn).convert('RGBA')
+    assert img.size == (256, 256)
+    draw = PIL.ImageDraw.Draw(img)
+    fontsize = round( 50/len(text) * min(10, 4 + len(text)/2) )
+    # fontsize = round(140 / len(text)**.5)
+    font = PIL.ImageFont.truetype("GilkeyNotes.ttf", fontsize)  # https://www.fontmeme.com/fonts/gilkeynotes-font/
+    y = 256 - 15 - round(.65*fontsize)
+
+    [draw.text((20+dx, y+dy), text, fill=(0, 0, 0), font=font) for dx in [-1,1] for dy in [-1,1]]
+    draw.text((20, y), text, fill=(255, 255, 255), font=font)
+
+    img.save('autographed.png')
+    return 'autographed.png'
+
+
 if __name__ == '__main__':
+
+    autograph('0.png')
 
     if len(sys.argv) >= 2:
         huggee_list = sys.argv[1:]

@@ -11,6 +11,10 @@ WORKDIR /home
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY *.ttf /usr/share/fonts/truetype/
+
+RUN fc-cache -f -v
+
 COPY . .
 
 ENTRYPOINT [ "sh", "run_public.sh" ]

@@ -9,7 +9,6 @@ import numpy
 import glob
 import sys
 import os
-import re
 
 
 # how to position 1-3 images (x, y, scaling)
@@ -43,7 +42,7 @@ def resize_and_center(image, new_dim):
     return PIL.ImageOps.expand(image, padding)
 
 
-def hugged(people, maxsize=None, text=None, base_mode='grin', crop_mode='square'):
+def hugged(people, maxsize=None, texts=None, base_mode='grin', crop_mode='square'):
     '''creates hug scene from input which is resized to maxsize
     input: up to 3 (profile) pictures that will be hugged, as PIL.Image
     return: single PIL.Image'''
@@ -75,22 +74,26 @@ def hugged(people, maxsize=None, text=None, base_mode='grin', crop_mode='square'
     return image
 
 
-def autographed(people, maxsize=None, text=None, base_mode=None, crop_mode=None):
-    assert people[0].size == (256, 256)
-    draw = PIL.ImageDraw.Draw(people[0])
-    text = re.sub('[^0-9a-zA-Z]+', ' ', text)
-
+def draw_text_with_outline(draw, text, corner, fill, font):
     fontsize = round( 50/len(text) * min(10, 4 + len(text)/2) )  # scale to width, but make shorter for short texts
-    font = PIL.ImageFont.truetype("GilkeyNotes.ttf", fontsize)  # https://www.fontmeme.com/fonts/gilkeynotes-font/
-    y = 256 - 15 - round(.65*fontsize)
+    y = 256 - 15 - round(.65*fontsize) if corner == 'bottom-left' else 15
+    font = PIL.ImageFont.truetype(font, fontsize)  # https://www.fontmeme.com/fonts/gilkeynotes-font/
 
-    [draw.text((20+dx, y+dy), text, fill=(0, 0, 0), font=font) for dx in [-1,1] for dy in [-1,1]]  # border
-    draw.text((20, y), text, fill=(255, 255, 255), font=font)
-
-    return people[0]
+    [draw.text((20+dx, y+dy), text, fill=(0, 0, 0), font=font) for dx in [-1,1] for dy in [-1,1]]  # outline
+    draw.text((20, y), text, fill=fill, font=font)
 
 
-def apply_save(input_fns, func, fn_out='output.png', maxsize=None, text=None, base_mode='smile', crop_mode='square'):
+def autographed(people, maxsize=None, texts=None, base_mode=None, crop_mode=None):
+    image = resize_and_center(people[0], (256, 256))
+    draw = PIL.ImageDraw.Draw(image)
+
+    draw_text_with_outline(draw, text=texts[0],           corner='bottom-left', fill=(255, 255, 255), font='GilkeyNotes.ttf')
+    draw_text_with_outline(draw, text=(texts + [' '])[1], corner='top-left'   , fill=(255, 255, 255), font='GilkeyNotes.ttf')
+
+    return image
+
+
+def apply_save(input_fns, func, fn_out='output.png', maxsize=None, texts=None, base_mode='smile', crop_mode='square'):
     if not issubclass(type(input_fns), list):
         fn_out = input_fns + '.' + func.__name__ + '.png'
         input_fns = [input_fns]
@@ -99,10 +102,10 @@ def apply_save(input_fns, func, fn_out='output.png', maxsize=None, text=None, ba
     for i in range(len(input_fns[:3])):
         people.append( PIL.Image.open(input_fns[i]).convert('RGBA') )
 
-    func(people, maxsize, text, base_mode, crop_mode).save(fn_out)
+    func(people, maxsize, texts, base_mode, crop_mode).save(fn_out)
 
 
-def apply_gif_save(input_fns, func, fn_out='output.gif', maxsize=None, text=None, base_mode='smile', crop_mode='square'):
+def apply_gif_save(input_fns, func, fn_out='output.gif', maxsize=None, texts=None, base_mode='smile', crop_mode='square'):
 
     readers = [ imageio.get_reader(input_fn)  for input_fn in input_fns ]
     per_frame_duration = min( reader.get_meta_data().get('duration', 1000)  for reader in readers )
@@ -113,7 +116,7 @@ def apply_gif_save(input_fns, func, fn_out='output.gif', maxsize=None, text=None
     # TODO: do better interlacing, maybe with greatest common denominator etc (-> filesize limit?)
     total_frames = min( ( len(sequence) for sequence in frames if len(sequence) ), default=1 )
     frames = [ sequence * total_frames if len(sequence) == 1 else sequence  for sequence in frames ]
-    frames = [ func(people, maxsize, text, base_mode, crop_mode)  for people in zip(*frames) ]
+    frames = [ func(people, maxsize, texts, base_mode, crop_mode)  for people in zip(*frames) ]
 
     # In case these are actually not animated, save as high-quality PNG and not GIF
     if len(frames) == 1:
@@ -156,8 +159,8 @@ def apply_gif_save(input_fns, func, fn_out='output.gif', maxsize=None, text=None
 
 if __name__ == '__main__':
 
-    apply_save('0.png', autographed, text='Janny♡')
-    apply_save('simp.png', autographed, text='The Simp Mage')
+    apply_save('0.png', autographed, texts=['Janny♡', 'To: The Dear Reader'])
+    apply_save('simp.png', autographed, texts=['The Simp Mage'])
 
     if len(sys.argv) >= 2:
         person_list = sys.argv[1:]

@@ -9,12 +9,12 @@ Preliminary reading:
 
 import time
 import datetime
+import collections
 
 import os
 import random
 import platform
 import subprocess
-import collections
 
 import logging
 import contextlib
@@ -139,7 +139,8 @@ send_file = send_file_production if is_production else send_file_mock
 def get_avatar_url_gif_or_png(person):
     '''https://stackoverflow.com/questions/54556637
     If no avatar URL is provided, discord will generate an avatar from the discriminator modulo 5
-    Pick animated GIF when available and PNG otherwise'''
+    Pick animated GIF when available and PNG otherwise
+    Note that Discord sometimes returns an 128x128 image even if we request 256x256'''
 
     try:
         return str(person.avatar_url_as(static_format='png')).rsplit('?', 1)[0] + '?size=256'
@@ -301,7 +302,8 @@ async def on_message(message):
 
     if 'give autograph' in message_lower:
         in_filenames = await avatar_download_asynchronous([message.author])
-        fn = hugify.apply_gif_save([in_filenames[0]], hugify.autographed, text=str(message.author)[:-5])
+        top_text = f'To: {str(message.mentions[0])[:-5]}' if message.mentions else message.content[message_lower.find('autograph')+10:]
+        fn = hugify.apply_gif_save([in_filenames[0]], hugify.autographed, texts=[str(message.author)[:-5], top_text] )
         return await send_file(message, '', fn, fn)
 
 

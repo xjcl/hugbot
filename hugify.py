@@ -86,9 +86,10 @@ def draw_text_with_outline(draw, text, corner, fill, font):
 def autographed(people, texts=[' ']):
     image = resize_and_center(people[0], (256, 256))
     draw = PIL.ImageDraw.Draw(image)
+    texts = [' ' if not text else text for text in texts] + [' ', ' ']
 
-    draw_text_with_outline(draw, text=texts[0],           corner='bottom-left', fill=(255, 255, 255), font='GilkeyNotes.ttf')
-    draw_text_with_outline(draw, text=(texts + [' '])[1], corner='top-left'   , fill=(255, 255, 255), font='GilkeyNotes.ttf')
+    draw_text_with_outline(draw, text=texts[0], corner='bottom-left', fill=(255, 255, 255), font='GilkeyNotes.ttf')
+    draw_text_with_outline(draw, text=texts[1], corner='top-left'   , fill=(255, 255, 255), font='GilkeyNotes.ttf')
 
     return image
 

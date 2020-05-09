@@ -42,7 +42,7 @@ def resize_and_center(image, new_dim):
     return PIL.ImageOps.expand(image, padding)
 
 
-def hugged(people, maxsize=None, texts=None, base_mode='grin', crop_mode='square'):
+def hugged(people, maxsize=None, base_mode='grin', crop_mode='square'):
     '''creates hug scene from input which is resized to maxsize
     input: up to 3 (profile) pictures that will be hugged, as PIL.Image
     return: single PIL.Image'''
@@ -83,7 +83,7 @@ def draw_text_with_outline(draw, text, corner, fill, font):
     draw.text((20, y), text, fill=fill, font=font)
 
 
-def autographed(people, maxsize=None, texts=None, base_mode=None, crop_mode=None):
+def autographed(people, texts=[' ']):
     image = resize_and_center(people[0], (256, 256))
     draw = PIL.ImageDraw.Draw(image)
 
@@ -93,7 +93,7 @@ def autographed(people, maxsize=None, texts=None, base_mode=None, crop_mode=None
     return image
 
 
-def apply_save(input_fns, func, fn_out='output.png', maxsize=None, texts=None, base_mode='smile', crop_mode='square'):
+def apply_save(input_fns, func, fn_out='output.png', **kwargs):
     if not issubclass(type(input_fns), list):
         fn_out = input_fns + '.' + func.__name__ + '.png'
         input_fns = [input_fns]
@@ -102,10 +102,10 @@ def apply_save(input_fns, func, fn_out='output.png', maxsize=None, texts=None, b
     for i in range(len(input_fns[:3])):
         people.append( PIL.Image.open(input_fns[i]).convert('RGBA') )
 
-    func(people, maxsize, texts, base_mode, crop_mode).save(fn_out)
+    func(people, **kwargs).save(fn_out)
 
 
-def apply_gif_save(input_fns, func, fn_out='output.gif', maxsize=None, texts=None, base_mode='smile', crop_mode='square'):
+def apply_gif_save(input_fns, func, fn_out='output.gif', **kwargs):
 
     readers = [ imageio.get_reader(input_fn)  for input_fn in input_fns ]
     per_frame_duration = min( reader.get_meta_data().get('duration', 1000)  for reader in readers )
@@ -116,7 +116,7 @@ def apply_gif_save(input_fns, func, fn_out='output.gif', maxsize=None, texts=Non
     # TODO: do better interlacing, maybe with greatest common denominator etc (-> filesize limit?)
     total_frames = min( ( len(sequence) for sequence in frames if len(sequence) ), default=1 )
     frames = [ sequence * total_frames if len(sequence) == 1 else sequence  for sequence in frames ]
-    frames = [ func(people, maxsize, texts, base_mode, crop_mode)  for people in zip(*frames) ]
+    frames = [ func(people, **kwargs)  for people in zip(*frames) ]
 
     # In case these are actually not animated, save as high-quality PNG and not GIF
     if len(frames) == 1:

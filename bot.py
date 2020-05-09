@@ -222,7 +222,7 @@ async def hug(message, message_lower):
                 async with aiofiles.open('attach', 'wb') as file:
                     await file.write(await resp.read())
 
-        fn = hugify.apply_gif_save(['attach'], hugify.hugged, 'hugged.gif', 180)  # 200
+        fn = hugify.apply_gif_save(['attach'], hugify.hugged, 'hugged.gif', maxsize=180)  # 200
         return await send_file(message, '', fn, fn)
 
     start_time = time.time()
@@ -254,7 +254,7 @@ async def hug(message, message_lower):
 
         reply = 'Please refrain from mentioning everyone, use "hug everyone" (no @) instead' * message.mention_everyone
 
-        fn = hugify.apply_gif_save(in_filenames, hugify.hugged, 'hugged.gif', 180, None, base_mode, crop_mode)
+        fn = hugify.apply_gif_save(in_filenames, hugify.hugged, 'hugged.gif', maxsize=180, base_mode=base_mode, crop_mode=crop_mode)
         await send_file(message, reply, fn, fn)
         # await send_file(message, reply, fn, 'hugged ' + str_huggees(huggee_list) + '.gif')
 

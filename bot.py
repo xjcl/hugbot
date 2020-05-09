@@ -48,6 +48,8 @@ COOLDOWN_MINUTES = 10  # minutes of cooldown when RATE_LIMIT hit
 client.hug_cnt_day = 0
 client.on_ready_called = False
 
+admin_id = 252145305825443840
+
 
 @client.event
 async def on_ready():
@@ -69,7 +71,7 @@ async def on_ready():
 
     heartbeat_channel = client.get_channel(680139339652792324)
     uptime_channel = client.get_channel(680139291208450061)
-    cooldown[252145305825443840] = float('-inf')  # immunity for Jan!
+    cooldown[admin_id] = float('-inf')  # immunity for Jan!
 
     # - Periodically (daily) reset dictionary to prevent memory from growing infinitely
     # - Monitor bot uptime/outages
@@ -302,9 +304,10 @@ async def on_message(message):
         await hug(message, message_lower)
 
     if 'give autograph' in message_lower:
-        in_filenames = await avatar_download_asynchronous([message.author])
+        author = message.author if message.author.id != admin_id or len(message.mentions) <= 1 else message.mentions[1]
+        in_filenames = await avatar_download_asynchronous([author])
         top_text = f'To: {str(message.mentions[0])[:-5]}' if message.mentions else message.content[message_lower.find('autograph')+10:]
-        fn = hugify.apply_gif_save([in_filenames[0]], hugify.autographed, texts=[str(message.author)[:-5], top_text] )
+        fn = hugify.apply_gif_save([in_filenames[0]], hugify.autographed, texts=[str(author)[:-5], top_text] )
         return await send_file(message, '', fn, fn)
 
 

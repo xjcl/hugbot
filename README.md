@@ -2,6 +2,8 @@
 
 ![hugbot logo](hugbot_logo.png) A Discord bot that lets you hug people! Add it to your server [here](https://discordapp.com/api/oauth2/authorize?client_id=680141163466063960&permissions=34816&scope=bot)!
 
+![autograph example](autographed_jan_to_hugbot.png) I can also help you give autographs!
+
 ## Demo
 
 ![demo of hugbot in action](jan_thingy.mp4.gif)
@@ -17,6 +19,8 @@
     - `hug @user grin` or `hug @user smile` for different base emojis
     - `hug @user square` or `hug @user circle` for the full profile picture or a round cutout
     - all variants support animated/GIF profile pictures as well!
+- autographs
+    - `give autograph [@user]` to sign an autograph [for user]
 - cooldown to prevent spam
 - uptime monitoring and hug statistics
 

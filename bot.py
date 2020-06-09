@@ -11,6 +11,7 @@ import time
 import datetime
 import collections
 
+import io
 import os
 import random
 import platform
@@ -187,11 +188,11 @@ def only_run_if_activated(function):
 
 @only_run_if_activated
 async def execute_code(message, i):
-    '''run message as python code (very insecure)'''
+    '''run message as python code (very insecure, only used for the private version of the bot)'''
 
     code = message.content[i+1:].replace('```', '').replace('python', '')
     if any(badstr in code for badstr in ['open', 'token', 'os', 'sys', 'exit', 'import', 'subprocess', '_', 'rm']):
-        return await send_message(client, message, '**You are trying to hack me. Incident reported to FBI CIA**')
+        return await send_message(message, '**You are trying to hack me. Incident reported to FBI CIA**')
 
     try:
         with io.StringIO() as buf:

@@ -22,6 +22,7 @@ alignments = [
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
 # cache these in RAM
+# use absolute path so this script can be called from anywhere
 base_grin  = PIL.Image.open(os.path.join(script_dir, 'twitter-grin-emoji-rgba.png')).convert('RGBA')
 base_smile = PIL.Image.open(os.path.join(script_dir, 'twitter-hug-emoji_base_full.png')).convert('RGBA')
 hand_l = PIL.Image.open(os.path.join(script_dir, 'twitter-waving-hand-sign-emoji-pure-outside.png')).convert('RGBA')

@@ -32,7 +32,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)8.8s] [%(funcName)16.16s()%(lineno)5.5s] %(message)s",
     # write to stdout AND log file
-    handlers=[logging.StreamHandler(), logging.FileHandler(f'{datetime.datetime.now().isoformat()}.log')],
+    handlers=[logging.StreamHandler(), logging.FileHandler(f'log/hugbot_{datetime.datetime.now().isoformat()}.log')],
 )
 logger = logging.getLogger()
 

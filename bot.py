@@ -140,25 +140,17 @@ send_file = send_file_production if is_production else send_file_mock
 
 
 async def avatar_download_asynchronous(person_list):
-    '''Create #num_avatars separate download tasks'''
+    '''Download profile pictures that are exactly 256x256
+    Pick animated GIF when available, else static PNG, else default avatar (= f'{discrim%5}.png')'''
 
     async def download(person, i):
-        '''Download a profile picture that is exactly 256x256
-        Pick animated GIF when available, else static PNG, else default avatar (= f'{discrim%5}.png')'''
-
-        async with aiohttp.ClientSession() as session:
-            avatar_url = str(person.avatar_url_as(static_format='png')).rsplit('?', 1)[0] + '?size=256'
-            async with session.get(avatar_url, headers=MOZHEADER) as resp:
-                remote_img = await resp.read()
-
-        avatar_file = f"hug{i}.{avatar_url.rsplit('.', 1)[1]}"
-        async with aiofiles.open(avatar_file, 'wb') as file:
-            await file.write(remote_img)
-
+        avatar_url = person.avatar_url_as(static_format='png', size=256)
+        avatar_file = f"hug{i}.{str(avatar_url).rsplit('.', 1)[1]}"
+        await avatar_url.save(avatar_file)
         return avatar_file
 
     return await asyncio.gather(*(
-        asyncio.ensure_future(download(person, i)) for i, person in enumerate(person_list)
+        asyncio.create_task(download(person, i)) for i, person in enumerate(person_list)
     ))
 
 

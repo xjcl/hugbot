@@ -139,35 +139,19 @@ send_message = send_message_production if is_production else send_message_mock
 send_file = send_file_production if is_production else send_file_mock
 
 
-def get_avatar_url_gif_or_png(person):
-    '''https://stackoverflow.com/questions/54556637
-    Return a profile picture that is exactly 256x256
-    Pick animated GIF when available and PNG otherwise
-    If no avatar URL is provided, discord will generate an avatar from the discriminator modulo 5'''
-
-    try:
-        return str(person.avatar_url_as(static_format='png')).rsplit('?', 1)[0] + '?size=256'
-    except:
-        img_url = str(person.avatar_url).replace('webp', 'png').rsplit('?', 1)[0] + '?size=256'
-
-        if not img_url:
-            return f'https://cdn.discordapp.com/embed/avatars/{int(person.discriminator) % 5}.png'
-
-        if person.avatar.startswith('a_'):
-            return img_url.replace('png', 'gif')
-
-
 async def avatar_download_asynchronous(person_list):
     '''Create #num_avatars separate download tasks'''
 
     async def download(person, i):
+        '''Download a profile picture that is exactly 256x256
+        Pick animated GIF when available, else static PNG, else default avatar (= f'{discrim%5}.png')'''
 
         async with aiohttp.ClientSession() as session:
-            avatar_url = get_avatar_url_gif_or_png(person)
+            avatar_url = str(person.avatar_url_as(static_format='png')).rsplit('?', 1)[0] + '?size=256'
             async with session.get(avatar_url, headers=MOZHEADER) as resp:
                 remote_img = await resp.read()
 
-        avatar_file = f'hug{i}.' + avatar_url.rsplit('.', 1)[1]
+        avatar_file = f"hug{i}.{avatar_url.rsplit('.', 1)[1]}"
         async with aiofiles.open(avatar_file, 'wb') as file:
             await file.write(remote_img)
 

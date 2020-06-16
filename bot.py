@@ -140,14 +140,13 @@ send_file = send_file_production if is_production else send_file_mock
 
 
 async def avatar_download_asynchronous(person_list):
-    '''Download profile pictures that are exactly 256x256
+    '''Download list of profile pictures, in 256x256, in parallel
     Pick animated GIF when available, else static PNG, else default avatar (= f'{discrim%5}.png')'''
 
     async def download(person, i):
         avatar_url = person.avatar_url_as(static_format='png', size=256)
-        avatar_file = f"hug{i}.{str(avatar_url).rsplit('.', 1)[1]}"
-        await avatar_url.save(avatar_file)
-        return avatar_file
+        await avatar_url.save(f"avatar{i}")
+        return f"avatar{i}"
 
     return await asyncio.gather(*(
         asyncio.create_task(download(person, i)) for i, person in enumerate(person_list)
@@ -197,12 +196,9 @@ async def hug(message, message_lower):
         if not message.attachments:
             return
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(message.attachments[0].url, headers=MOZHEADER) as resp:
-                async with aiofiles.open('attach', 'wb') as file:
-                    await file.write(await resp.read())
+        await message.attachments[0].save('attach')
 
-        fn = hugify.apply_gif_save(['attach'], hugify.hugged, 'hugged.gif', maxsize=180)  # 200
+        fn = hugify.apply_gif_save(['attach'], hugify.hugged, 'hugged.gif', maxsize=180)
         return await send_file(message, '', fn, fn)
 
     start_time = time.time()

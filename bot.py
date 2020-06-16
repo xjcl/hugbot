@@ -98,7 +98,7 @@ async def on_ready():
             await uptime_channel.send(f"```{subprocess.check_output(['uptime']).decode().strip()}```")
             await uptime_channel.send(f"```{subprocess.check_output(['df', '-h', '/']).decode().strip().splitlines()[-1]}```")
             await uptime_channel.send(f'Servers served: {len(client.guilds)}')
-            await uptime_channel.send(f"Hugs (today/lifetime): {client.hug_cnt_day}/{len(open('hug_cnt_total').read())}")
+            await uptime_channel.send(f"Hugs (today/lifetime): {client.hug_cnt_day}/{len(open('log/hug_cnt_total').read())}")
             client.hug_cnt_day = 0
 
     logger.error(f'on_ready concluded unexpectedly. Heartbeat channel {heartbeat_channel} uptime channel {uptime_channel}')
@@ -265,7 +265,7 @@ async def hug(message, message_lower):
         client.hug_cnt_day += 1
         logger.info(f'Done t={time.time() - start_time}')
         logger.info(client.hug_cnt_day)
-        open('hug_cnt_total', 'a').write('.')
+        open('log/hug_cnt_total', 'a').write('.')
 
 
 @client.event

@@ -134,6 +134,7 @@ attach
 *.png
 *.gif
 
+log/
 *.log
 
 *.sh

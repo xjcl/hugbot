@@ -182,7 +182,7 @@ async def execute_code(message, i):
         with io.StringIO() as buf:
             with contextlib.redirect_stdout(buf):
                 exec(code, {}, {})
-            await send_message(message, buf.getvalue().replace('@', '@\u200b')[:2000])  # escape '@everyone' using zero-width space
+            await send_message(message, discord.utils.escape_mentions(buf.getvalue())[:2000])
     except Exception as e:
         await send_message(message, '**' + repr(e) + '**')
 
@@ -276,7 +276,7 @@ async def on_message(message):
 
     # reverse input
     if 'revers' in message_lower:
-        await send_message(message, message.content[::-1].replace('@', '@​\u200b'))  # escape '@everyone' using zero-width space
+        await send_message(message, discord.utils.escape_mentions(message.content[::-1]))
 
     if 'good bot' == message_lower:
         await send_message(message, 'uwu')

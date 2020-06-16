@@ -116,7 +116,7 @@ def apply_gif_save(input_fns, func, fn_out='output.gif', **kwargs):
 
     # treat a static image as 1-frame GIF
     # TODO: do better interlacing, maybe with greatest common denominator etc (-> filesize limit?)
-    total_frames = min( ( len(sequence) for sequence in frames if len(sequence) ), default=1 )
+    total_frames = min( ( len(sequence) for sequence in frames if len(sequence) > 1 ), default=1 )
     frames = [ sequence * total_frames if len(sequence) == 1 else sequence  for sequence in frames ]
     frames = [ func(people, **kwargs)  for people in zip(*frames) ]
 

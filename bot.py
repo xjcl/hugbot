@@ -141,9 +141,9 @@ send_file = send_file_production if is_production else send_file_mock
 
 def get_avatar_url_gif_or_png(person):
     '''https://stackoverflow.com/questions/54556637
-    If no avatar URL is provided, discord will generate an avatar from the discriminator modulo 5
+    Return a profile picture that is exactly 256x256
     Pick animated GIF when available and PNG otherwise
-    Note that Discord sometimes returns an 128x128 image even if we request 256x256'''
+    If no avatar URL is provided, discord will generate an avatar from the discriminator modulo 5'''
 
     try:
         return str(person.avatar_url_as(static_format='png')).rsplit('?', 1)[0] + '?size=256'

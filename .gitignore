@@ -140,3 +140,5 @@ log/
 *.sh
 continuous_deployment*
 old/
+
+*?size=256

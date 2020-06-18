@@ -24,6 +24,7 @@ import aiofiles
 import aiohttp
 import asyncio
 import discord
+from discord.ext import tasks
 
 import hugify
 
@@ -47,18 +48,48 @@ RATE_LIMIT = 10
 COOLDOWN_MINUTES = 10  # minutes of cooldown when RATE_LIMIT hit
 
 client.hug_cnt_day = 0
-client.on_ready_called = False
 
 admin_id = 252145305825443840
 
 
+@tasks.loop(minutes=1)
+async def heartbeat():
+    '''Send a regular heartbeat to a Discord channel for use in uptime reporting
+    Have to run it with Exceptions suppressed, otherwise a single failed call will stop the whole loop'''
+    with contextlib.suppress(Exception):
+        print('heartbeating')
+        heartbeat_channel = client.get_channel(680139339652792324)
+        await heartbeat_channel.send("I'm up!")
+
+
+@tasks.loop(hours=24)
+async def uptime_report():
+    '''Write out a daily uptime report to the specified channel, including hug and server statistics'''
+    with contextlib.suppress(Exception):
+        print('uptiming')
+        heartbeat_channel = client.get_channel(680139339652792324)
+        uptime_channel = client.get_channel(680139291208450061)
+        now = datetime.datetime.now()
+
+        uptimestamps = [message.created_at.replace(microsecond=0) async for message in heartbeat_channel.history(limit=24*60*2+10) if (now - message.created_at).days == 0]
+        uptime = len(uptimestamps) / (24 * 60)
+        await uptime_channel.send(f'__**Uptime report for {now.isoformat()[:10]}**__:  {100*uptime:.2f}%')
+        downtimes = [(earlier, later) for (earlier, later) in zip(uptimestamps[::-1], uptimestamps[-2::-1]) if abs(later - earlier) > datetime.timedelta(minutes=1, seconds=30)]
+        for (earlier, later) in downtimes:
+            await uptime_channel.send(f'* Went down at {earlier} for {later - earlier} :frowning:')
+        if not downtimes:
+            await uptime_channel.send('No downtime yay!! :hugging:')
+        max_latency = max(timestamp.second for timestamp in uptimestamps) - min(timestamp.second for timestamp in uptimestamps)
+        await uptime_channel.send(f'Maximum latency: {max_latency} seconds')
+        await uptime_channel.send(f"```{subprocess.check_output(['uptime']).decode().strip()}```")
+        await uptime_channel.send(f"```{subprocess.check_output(['df', '-h', '/']).decode().strip().splitlines()[-1]}```")
+        await uptime_channel.send(f'Servers served: {len(client.guilds)}')
+        await uptime_channel.send(f"Hugs (today/lifetime): {client.hug_cnt_day}/{len(open('log/hug_cnt_total').read())}")
+        client.hug_cnt_day = 0
+
+
 @client.event
 async def on_ready():
-    if client.on_ready_called:
-        return
-
-    client.on_ready_called = True
-
     g = discord.Game(['I won\'t reply!', 'Use *hug help*!'][is_production])
     await client.change_presence(activity=g)
 
@@ -70,38 +101,7 @@ async def on_ready():
     logger.info('I\'m in!!')
     logger.info('-' * 20)
 
-    heartbeat_channel = client.get_channel(680139339652792324)
-    uptime_channel = client.get_channel(680139291208450061)
     cooldown[admin_id] = float('-inf')  # immunity for Jan!
-
-    # - Periodically (daily) reset dictionary to prevent memory from growing infinitely
-    # - Monitor bot uptime/outages
-    while heartbeat_channel and uptime_channel:
-        now = datetime.datetime.now()
-        await asyncio.sleep(60 - now.second)
-        await heartbeat_channel.send("I'm up!")
-
-        if len(cooldown) >= 2:
-            logger.info(f'COOLDOWN: {cooldown}')
-
-        if now.hour == 23 and now.minute == 59:
-            uptimestamps = [message.created_at.replace(microsecond=0) async for message in heartbeat_channel.history(limit=24*60+10) if message.created_at.day == now.day]
-            uptime = len(uptimestamps) / (24 * 60)
-            await uptime_channel.send(f'__**Uptime report for {now.isoformat()[:10]}**__:  {100*uptime:.2f}%')
-            downtimes = [(earlier, later) for (earlier, later) in zip(uptimestamps[::-1], uptimestamps[-2::-1]) if abs(later - earlier) > datetime.timedelta(minutes=1, seconds=30)]
-            for (earlier, later) in downtimes:
-                await uptime_channel.send(f'* Went down at {earlier} for {later - earlier} :frowning:')
-            if not downtimes:
-                await uptime_channel.send('No downtime yay!! :hugging:')
-            max_latency = max((timestamp.second, timestamp) for timestamp in uptimestamps if timestamp.second <= 58)
-            await uptime_channel.send(f'Maximum latency: {max_latency[0]} seconds at {max_latency[1]}')
-            await uptime_channel.send(f"```{subprocess.check_output(['uptime']).decode().strip()}```")
-            await uptime_channel.send(f"```{subprocess.check_output(['df', '-h', '/']).decode().strip().splitlines()[-1]}```")
-            await uptime_channel.send(f'Servers served: {len(client.guilds)}')
-            await uptime_channel.send(f"Hugs (today/lifetime): {client.hug_cnt_day}/{len(open('log/hug_cnt_total').read())}")
-            client.hug_cnt_day = 0
-
-    logger.error(f'on_ready concluded unexpectedly. Heartbeat channel {heartbeat_channel} uptime channel {uptime_channel}')
 
 
 async def cooldown_decrease(author):
@@ -117,6 +117,7 @@ async def cooldown_increase(author):
 
 
 async def send_message_production(message, msg_str):
+    '''Reply to a message. The author of the triggering messages gets a notch in the cooldown dictionary which automatically disappears after COOLDOWN_MINUTES'''
     logger.info(f'OUT: {msg_str}')
     channel, author = message.channel, message.author
     msg_str += ('\n' + str(message.author.mention) + ', you are now rate-limited (I will ignore you for a while)') * await cooldown_increase(message.author)
@@ -284,4 +285,6 @@ async def on_message(message):
         return await send_file(message, '', fn, fn)
 
 
+heartbeat.start()
+uptime_report.start()
 client.run(os.environ['DISCORD_BOT_SECRET'])

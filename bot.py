@@ -38,8 +38,7 @@ logging.basicConfig(
 logger = logging.getLogger()
 
 client = discord.Client()
-
-is_production = os.environ['PRODUCTION'] == 'True'
+client.hug_cnt_day = 0
 
 MOZHEADER = {'User-Agent': 'Mozilla/5.0'}  # pretend not to be a bot =|
 
@@ -47,18 +46,18 @@ cooldown = collections.defaultdict(int)
 RATE_LIMIT = 10
 COOLDOWN_MINUTES = 10  # minutes of cooldown when RATE_LIMIT hit
 
-client.hug_cnt_day = 0
-
-admin_id = 252145305825443840
+is_production = os.environ['PRODUCTION'] == 'True'
+id_admin = int(os.environ.get('ID_ADMIN', 0))
+id_heartbeat_channel = int(os.environ.get('ID_HEARTBEAT_CHANNEL', 0))
+id_uptime_channel = int(os.environ.get('ID_UPTIME_CHANNEL', 0))
 
 
 @tasks.loop(minutes=1)
 async def heartbeat():
-    '''Send a regular heartbeat to a Discord channel for use in uptime reporting
+    '''Send a frequent heartbeat to a Discord channel for use in uptime reporting
     Have to run it with Exceptions suppressed, otherwise a single failed call will stop the whole loop'''
     with contextlib.suppress(Exception):
-        print('heartbeating')
-        heartbeat_channel = client.get_channel(680139339652792324)
+        heartbeat_channel = client.get_channel(id_heartbeat_channel)
         await heartbeat_channel.send("I'm up!")
 
 
@@ -66,9 +65,8 @@ async def heartbeat():
 async def uptime_report():
     '''Write out a daily uptime report to the specified channel, including hug and server statistics'''
     with contextlib.suppress(Exception):
-        print('uptiming')
-        heartbeat_channel = client.get_channel(680139339652792324)
-        uptime_channel = client.get_channel(680139291208450061)
+        heartbeat_channel = client.get_channel(id_heartbeat_channel)
+        uptime_channel = client.get_channel(id_uptime_channel)
         now = datetime.datetime.now()
 
         uptimestamps = [message.created_at.replace(microsecond=0) async for message in heartbeat_channel.history(limit=24*60*2+10) if (now - message.created_at).days == 0]
@@ -101,7 +99,7 @@ async def on_ready():
     logger.info('I\'m in!!')
     logger.info('-' * 20)
 
-    cooldown[admin_id] = float('-inf')  # immunity for Jan!
+    cooldown[id_admin] = float('-inf')  # immunity for Jan!
 
 
 async def cooldown_decrease(author):
@@ -278,7 +276,7 @@ async def on_message(message):
         await hug(message, message_lower)
 
     if 'give autograph' in message_lower:
-        author = message.author if message.author.id != admin_id or len(message.mentions) <= 1 else message.mentions[1]
+        author = message.author if message.author.id != id_admin or len(message.mentions) <= 1 else message.mentions[1]
         in_filenames = await avatar_download_asynchronous([author])
         top_text = f'To: {str(message.mentions[0])[:-5]}' if message.mentions else message.content[message_lower.find('autograph')+10:]
         fn = hugify.apply_gif_save([in_filenames[0]], hugify.autographed, texts=[str(author)[:-5], top_text] )

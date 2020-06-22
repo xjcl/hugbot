@@ -61,7 +61,7 @@ async def heartbeat():
         await heartbeat_channel.send("I'm up!")
 
 
-@tasks.loop(hours=24)
+@tasks.loop(hours=12)
 async def uptime_report():
     '''Write out a daily uptime report to the specified channel, including hug and server statistics'''
     with contextlib.suppress(Exception):
@@ -71,7 +71,7 @@ async def uptime_report():
 
         uptimestamps = [message.created_at.replace(microsecond=0) async for message in heartbeat_channel.history(limit=24*60*2+10) if (now - message.created_at).days == 0]
         uptime = len(uptimestamps) / (24 * 60)
-        await uptime_channel.send(f'__**Uptime report for {now.isoformat()[:10]}**__:  {100*uptime:.2f}%')
+        await uptime_channel.send(f'__**Uptime report for {now.isoformat()[:16]}**__:  {100*uptime:.2f}%')
         downtimes = [(earlier, later) for (earlier, later) in zip(uptimestamps[::-1], uptimestamps[-2::-1]) if abs(later - earlier) > datetime.timedelta(minutes=1, seconds=30)]
         for (earlier, later) in downtimes:
             await uptime_channel.send(f'* Went down at {earlier} for {later - earlier} :frowning:')

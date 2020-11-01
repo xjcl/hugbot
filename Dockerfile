@@ -22,4 +22,4 @@ RUN fc-cache -f -v
 
 COPY . .
 
-ENTRYPOINT [ "sh", "run_public.sh" ]
+ENTRYPOINT [ "python", "bot.py" ]

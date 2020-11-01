@@ -26,8 +26,8 @@
 
 ## How to run your own copy
 
-- **Install**: ```pip install -r requirements.txt; sudo cp *.ttf /usr/share/fonts/truetype/; fc-cache -f -v```
-- **Run**: ```DISCORD_BOT_SECRET=yourTokenHere ./run_public.sh```
+- **Setup**: Put your ```DISCORD_BOT_SECRET``` into ```docker-compose.yml```
+- **Run**: ```sudo docker-compose up```
 
 Alternatively, using **Docker** 🐳: ```sudo docker build -t hugbot .; sudo docker run -it --rm --env DISCORD_BOT_SECRET=yourTokenHere --name hugbot --mount type=bind,src=$PWD/log,dst=/home/log hugbot```
 

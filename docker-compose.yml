@@ -1,0 +1,21 @@
+# First, set variables under 'environment:'
+# Then run with:   eval "sudo docker-compose "{down,build,up}";"
+
+version: '2'
+
+services:
+  bot:
+    build: .
+    image: hugbot
+    volumes:
+      - ./log:/home/log
+    environment:
+      - PRODUCTION=True
+      - activate_feature_hug=True
+      - activate_feature_execute_code=False
+
+      - DISCORD_BOT_SECRET=...
+      - ID_ADMIN=1
+      - ID_HEARTBEAT_CHANNEL=2
+      - ID_UPTIME_CHANNEL=3
+    restart: unless-stopped

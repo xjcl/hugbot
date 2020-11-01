@@ -58,7 +58,7 @@ async def heartbeat():
     Have to run it with Exceptions suppressed, otherwise a single failed call will stop the whole loop'''
     with contextlib.suppress(Exception):
         heartbeat_channel = client.get_channel(id_heartbeat_channel)
-        await heartbeat_channel.send("I'm up!")
+        await heartbeat_channel.send(f"```{subprocess.check_output(['uptime']).decode().strip()}```")
 
 
 @tasks.loop(hours=12)
@@ -80,6 +80,7 @@ async def uptime_report():
         max_latency = max(timestamp.second for timestamp in uptimestamps) - min(timestamp.second for timestamp in uptimestamps)
         await uptime_channel.send(f'Maximum latency: {max_latency} seconds')
         await uptime_channel.send(f"```{subprocess.check_output(['uptime']).decode().strip()}```")
+        await uptime_channel.send(f"```{subprocess.check_output(['free', '-h']).decode()[80:123]}```")
         await uptime_channel.send(f"```{subprocess.check_output(['df', '-h', '/']).decode().strip().splitlines()[-1]}```")
         await uptime_channel.send(f'Servers served: {len(client.guilds)}')
         await uptime_channel.send(f"Hugs (today/lifetime): {client.hug_cnt_day}/{len(open('log/hug_cnt_total').read())}")

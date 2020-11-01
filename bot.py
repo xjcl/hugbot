@@ -37,7 +37,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger()
 
-client = discord.Client()
+intents = discord.Intents.default()
+intents.members = True
+client = discord.Client(intents=intents)
 client.hug_cnt_day = 0
 
 MOZHEADER = {'User-Agent': 'Mozilla/5.0'}  # pretend not to be a bot =|

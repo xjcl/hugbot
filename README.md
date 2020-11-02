@@ -29,9 +29,7 @@
 - **Setup**: Put your ```DISCORD_BOT_SECRET``` into ```docker-compose.yml```
 - **Run**: ```sudo docker-compose up```
 
-Alternatively, using **Docker** 🐳: ```sudo docker build -t hugbot .; sudo docker run -it --rm --env DISCORD_BOT_SECRET=yourTokenHere --name hugbot --mount type=bind,src=$PWD/log,dst=/home/log hugbot```
-
-For advanced features (admin commands, uptime reporting), find the channel/user ids by right-clicking on them and use ```--env ID_ADMIN=... --env ID_HEARTBEAT_CHANNEL=... --env ID_UPTIME_CHANNEL=...```
+For advanced features (admin commands, uptime reporting), find the channel/user ids by right-clicking on them and adding them to the environment variables in ```docker-compose.yml```
 
 ## Contact
 
